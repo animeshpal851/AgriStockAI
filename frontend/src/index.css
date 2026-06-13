@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --soil: #2C1A0E;
+  --bark: #4A2C17;
+  --harvest: #C8832A;
+  --wheat: #E8C47A;
+  --sage: #5A7A3A;
+  --leaf: #7DAF4B;
+  --mist: #F4F0E8;
+  --cream: #FDFAF3;
+  --stone: #8A7968;
+  --ink: #1A1208;
+  --risk-low: #4CAF50;
+  --risk-medium: #FF9800;
+  --risk-high: #F44336;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --shadow-sm: 0 2px 8px rgba(44,26,14,0.08);
+  --shadow-md: 0 4px 20px rgba(44,26,14,0.12);
+  --shadow-lg: 0 8px 40px rgba(44,26,14,0.18);
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--cream);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--mist);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--harvest);
+  border-radius: 3px;
+}

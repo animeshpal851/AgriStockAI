@@ -1,0 +1,48 @@
+.pp {
+  min-height: calc(100vh - 72px);
+}
+
+.pp__header {
+  background: linear-gradient(135deg, var(--mist) 0%, white 100%);
+  border-bottom: 1px solid rgba(200, 131, 42, 0.12);
+  padding: 3.5rem 2rem 3rem;
+}
+
+.pp__header-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.pp__tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--harvest);
+  background: rgba(200, 131, 42, 0.1);
+  padding: 0.3rem 0.9rem;
+  border-radius: 50px;
+  margin-bottom: 1rem;
+}
+
+.pp__title {
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.pp__subtitle {
+  font-size: 1rem;
+  color: var(--stone);
+  max-width: 560px;
+  line-height: 1.7;
+}
+
+.pp__body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}

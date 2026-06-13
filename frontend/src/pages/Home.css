@@ -1,0 +1,144 @@
+.home__features {
+  background: var(--mist);
+  padding: 5rem 2rem;
+}
+
+.home__features-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.home__section-head {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.home__section-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--harvest);
+  background: rgba(200, 131, 42, 0.1);
+  padding: 0.35rem 1rem;
+  border-radius: 50px;
+  margin-bottom: 1rem;
+}
+
+.home__section-title {
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 700;
+  color: var(--soil);
+  line-height: 1.2;
+}
+
+.home__feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.home__feature-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(200, 131, 42, 0.06);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.home__feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.home__feature-icon {
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+}
+
+.home__feature-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--soil);
+  margin-bottom: 0.5rem;
+}
+
+.home__feature-card p {
+  font-size: 0.88rem;
+  color: var(--stone);
+  line-height: 1.7;
+}
+
+/* CTA */
+.home__cta {
+  padding: 5rem 2rem;
+  background: linear-gradient(135deg, var(--soil) 0%, var(--bark) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.home__cta::before {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: rgba(200, 131, 42, 0.15);
+  top: -100px;
+  right: -100px;
+  filter: blur(60px);
+}
+
+.home__cta-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.home__cta-inner h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  color: var(--wheat);
+  margin-bottom: 1rem;
+}
+
+.home__cta-inner p {
+  font-size: 1rem;
+  color: rgba(244, 240, 232, 0.7);
+  margin-bottom: 2rem;
+  line-height: 1.7;
+}
+
+.home__cta-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.9rem 2rem;
+  background: var(--harvest);
+  color: white;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 4px 20px rgba(200, 131, 42, 0.4);
+}
+
+.home__cta-btn:hover {
+  background: var(--wheat);
+  color: var(--soil);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+  .home__feature-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .home__feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
