@@ -31,7 +31,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer__bottom">
-        <span>© {new Date().getFullYear()} AgriStock AI · Built with Scikit-Learn, Flask &amp; React</span>
+        <span>© {new Date().getFullYear()} animeshpal</span>
       </div>
     </footer>
   );
