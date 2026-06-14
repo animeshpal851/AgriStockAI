@@ -124,6 +124,26 @@ export default function PredictionForm() {
 
   const handleChange = (field) => (e) => set(field)(e.target.value);
 
+  const handleNumericChange = (field) => (e) => {
+    let value = e.target.value;
+    // Allow empty string
+    if (value === "") {
+      set(field)("");
+      return;
+    }
+    // Parse and validate
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      // Only update if value is non-negative
+      if (numValue >= 0) {
+        set(field)(value);
+      } else {
+        // Silently ignore negative input
+        e.target.value = form[field];
+      }
+    }
+  };
+
   const canPredict =
     !unknownCrop &&
     form.state && form.district && form.crop && form.season &&
@@ -137,6 +157,14 @@ export default function PredictionForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canPredict) return;
+    
+    // Validate that district belongs to the selected state
+    if (!districts.includes(form.district)) {
+      showToast("error", "Selected district does not belong to the selected state");
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setResult(null);
     const payload = {
@@ -241,11 +269,17 @@ export default function PredictionForm() {
       value={form.area}
       placeholder="e.g. 2500"
       min="0"
+      step="any"
       onChange={(e) => {
-        setForm((prev) => ({
-          ...prev,
-          area: e.target.value,
-        }));
+        let value = e.target.value;
+        if (value === "") {
+          setForm((prev) => ({ ...prev, area: "" }));
+        } else {
+          const numValue = parseFloat(value);
+          if (!isNaN(numValue) && numValue >= 0) {
+            setForm((prev) => ({ ...prev, area: value }));
+          }
+        }
         setShowAreaSuggestions(true);
       }}
       onKeyDown={(e) => {
@@ -292,9 +326,10 @@ export default function PredictionForm() {
               className="pf__input"
               type="number"
               value={form.population}
-              onChange={handleChange("population")}
+              onChange={handleNumericChange("population")}
               placeholder="e.g. 500000"
               min="0"
+              step="any"
             />
           </div>
 
@@ -305,9 +340,10 @@ export default function PredictionForm() {
               className="pf__input"
               type="number"
               value={form.production}
-              onChange={handleChange("production")}
+              onChange={handleNumericChange("production")}
               placeholder="e.g. 8000"
               min="0"
+              step="any"
             />
           </div>
 
@@ -321,8 +357,10 @@ export default function PredictionForm() {
               className="pf__input pf__input--autofill"
               type="number"
               value={form.monthly_rainfall}
-              onChange={handleChange("monthly_rainfall")}
+              onChange={handleNumericChange("monthly_rainfall")}
               placeholder="Auto-filled from dataset"
+              min="0"
+              step="any"
             />
           </div>
         </div>
