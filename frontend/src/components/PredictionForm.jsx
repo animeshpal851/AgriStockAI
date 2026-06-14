@@ -4,7 +4,7 @@ import ResultCard from "./ResultCard";
 import Toast from "./Toast";
 import "./PredictionForm.css";
 
-const API_BASE = "http://127.0.0.1:5000";
+const API_BASE = "https://agristock-backend.onrender.com/";
 
 function AutocompleteInput({ label, id, value, onChange, suggestions, disabled, placeholder, onSelect }) {
   const [open, setOpen] = useState(false);
