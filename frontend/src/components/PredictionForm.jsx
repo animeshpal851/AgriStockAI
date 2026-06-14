@@ -149,6 +149,16 @@ export default function PredictionForm() {
       production: parseFloat(form.production),
       monthly_rainfall: parseFloat(form.monthly_rainfall),
     };
+    
+    // Validate that all numeric fields are non-negative
+    const numericFields = ["area", "population", "production", "monthly_rainfall"];
+    const negativeField = numericFields.find((field) => payload[field] < 0);
+    if (negativeField) {
+      showToast("error", `${negativeField.charAt(0).toUpperCase() + negativeField.slice(1)} must be a positive number`);
+      setLoading(false);
+      return;
+    }
+    
     try {
       const [demandRes, riskRes] = await Promise.all([
         axios.post(`${API_BASE}/api/predict-demand`, payload),

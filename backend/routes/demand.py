@@ -12,6 +12,17 @@ def demand_route():
     missing = [f for f in required if f not in data]
     if missing:
         return jsonify({"error": f"Missing fields: {missing}"}), 400
+    
+    # Validate that numeric fields are non-negative
+    numeric_fields = ["area", "population", "production", "monthly_rainfall"]
+    for field in numeric_fields:
+        try:
+            value = float(data[field])
+            if value < 0:
+                return jsonify({"error": f"{field.capitalize()} must be a positive number"}), 400
+        except (ValueError, TypeError):
+            return jsonify({"error": f"{field.capitalize()} must be a valid number"}), 400
+    
     try:
         result = predict_demand(data)
         return jsonify(result), 200
