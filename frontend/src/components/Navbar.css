@@ -107,6 +107,39 @@
   transform: translateY(-1px);
 }
 
+.navbar__user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar__user-email {
+  font-size: 0.85rem;
+  color: var(--stone);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar__logout {
+  background: var(--risk-high);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: var(--font-body);
+}
+
+.navbar__logout:hover {
+  background: #D32F2F;
+  transform: translateY(-1px);
+}
+
 .navbar__burger {
   display: none;
   flex-direction: column;

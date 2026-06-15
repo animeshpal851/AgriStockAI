@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, Link } from "react-router-dom";
 import "./Navbar.css";
 
-export default function Navbar() {
+export default function Navbar({ user, onLogout }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -11,6 +11,11 @@ export default function Navbar() {
     window.addEventListener("scroll", handler);
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  const handleLogout = () => {
+    onLogout();
+    setMenuOpen(false);
+  };
 
   return (
     <nav className={`navbar ${scrolled ? "navbar--scrolled" : ""}`}>
@@ -43,6 +48,12 @@ export default function Navbar() {
             <NavLink to="/about" className={({ isActive }) => isActive ? "active" : ""} onClick={() => setMenuOpen(false)}>
               About
             </NavLink>
+          </li>
+          <li className="navbar__user-section">
+            {user && <span className="navbar__user-email">{user.email}</span>}
+            <button className="navbar__logout" onClick={handleLogout}>
+              Logout
+            </button>
           </li>
           <li>
             <Link to="/predict" className="navbar__cta" onClick={() => setMenuOpen(false)}>
