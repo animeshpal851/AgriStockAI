@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./AuthPage.css";
 
-const API_BASE = "https://agristock-backend.onrender.com/";
+// Use localhost in development, production URL in production
+const API_BASE = import.meta.env.DEV 
+  ? "http://localhost:5000/" 
+  : "https://agristock-backend.onrender.com/";
 
 export default function AuthPage({ onLoginSuccess }) {
   const [isSignup, setIsSignup] = useState(false);

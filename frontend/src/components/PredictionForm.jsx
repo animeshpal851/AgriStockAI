@@ -4,7 +4,10 @@ import ResultCard from "./ResultCard";
 import Toast from "./Toast";
 import "./PredictionForm.css";
 
-const API_BASE = "https://agristock-backend.onrender.com/";
+// Use localhost in development, production URL in production
+const API_BASE = import.meta.env.DEV 
+  ? "http://localhost:5000/" 
+  : "https://agristock-backend.onrender.com/";
 
 function AutocompleteInput({ label, id, value, onChange, suggestions, disabled, placeholder, onSelect }) {
   const [open, setOpen] = useState(false);
@@ -188,9 +191,12 @@ export default function PredictionForm() {
     }
     
     try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const [demandRes, riskRes] = await Promise.all([
-        axios.post(`${API_BASE}/api/predict-demand`, payload),
-        axios.post(`${API_BASE}/api/predict-risk`, payload),
+        axios.post(`${API_BASE}/api/predict-demand`, payload, { headers }),
+        axios.post(`${API_BASE}/api/predict-risk`, payload, { headers }),
       ]);
       setResult({ demand: demandRes.data, risk: riskRes.data, input: payload });
       showToast("success", "Prediction complete!");
