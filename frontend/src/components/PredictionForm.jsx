@@ -44,7 +44,7 @@ function AutocompleteInput({
   // Reset highlighted index when filtered suggestions change
   useEffect(() => {
     setHighlightedIndex(-1);
-  }, [filtered]);
+  }, [filtered.length]);
 
   const handleSelectSuggestion = (suggestion) => {
     onSelect(suggestion);
@@ -54,76 +54,49 @@ function AutocompleteInput({
 
   const handleKeyDown = (e) => {
     // If dropdown is closed and user presses arrow keys, open it
-    if (!open && filtered.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
-      e.preventDefault();
-      setOpen(true);
-      setHighlightedIndex(0);
-      return;
-    }
-
-    // If dropdown is closed and user presses Tab
     if (!open) {
-      if (e.key === "Tab" && nextFieldRef?.current) {
+      if ((e.key === "ArrowDown" || e.key === "ArrowUp") && filtered.length > 0) {
         e.preventDefault();
-        nextFieldRef.current.focus();
+        setOpen(true);
+        setHighlightedIndex(0);
       }
       return;
     }
 
     // Dropdown is open - handle all key presses
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setHighlightedIndex((prev) => {
-          const nextIdx = prev < filtered.length - 1 ? prev + 1 : 0;
-          return nextIdx;
-        });
-        break;
-
-      case "ArrowUp":
-        e.preventDefault();
-        setHighlightedIndex((prev) => {
-          const nextIdx = prev > 0 ? prev - 1 : filtered.length - 1;
-          return nextIdx;
-        });
-        break;
-
-      case "Enter":
-        e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          const selected = filtered[highlightedIndex];
-          handleSelectSuggestion(selected);
-          if (nextFieldRef?.current) {
-            setTimeout(() => nextFieldRef.current.focus(), 0);
-          }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => 
+        prev < filtered.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) => 
+        prev > 0 ? prev - 1 : filtered.length - 1
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
+        handleSelectSuggestion(filtered[highlightedIndex]);
+        if (nextFieldRef?.current) {
+          setTimeout(() => nextFieldRef.current.focus(), 0);
         }
-        break;
-
-      case "Tab":
-        e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          const selected = filtered[highlightedIndex];
-          handleSelectSuggestion(selected);
-          if (nextFieldRef?.current) {
-            setTimeout(() => nextFieldRef.current.focus(), 0);
-          }
-        } else {
-          setOpen(false);
-          setHighlightedIndex(-1);
-          if (nextFieldRef?.current) {
-            nextFieldRef.current.focus();
-          }
-        }
-        break;
-
-      case "Escape":
-        e.preventDefault();
+      }
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
+        handleSelectSuggestion(filtered[highlightedIndex]);
+      } else {
         setOpen(false);
         setHighlightedIndex(-1);
-        break;
-
-      default:
-        break;
+      }
+      if (nextFieldRef?.current) {
+        setTimeout(() => nextFieldRef.current.focus(), 0);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setOpen(false);
+      setHighlightedIndex(-1);
     }
   };
 
@@ -148,7 +121,10 @@ function AutocompleteInput({
             }
           }}
           onBlur={() => {
-            setTimeout(() => setOpen(false), 200);
+            setTimeout(() => {
+              setOpen(false);
+              setHighlightedIndex(-1);
+            }, 150);
           }}
           onKeyDown={handleKeyDown}
           disabled={disabled}
@@ -414,24 +390,20 @@ export default function PredictionForm() {
                 min="0"
                 step="any"
                 onChange={(e) => {
-                  let value = e.target.value;
+                  const value = e.target.value;
                   if (value === "") {
                     setForm((prev) => ({ ...prev, area: "" }));
-                    setShowAreaSuggestions(false);
                   } else {
                     const numValue = parseFloat(value);
                     if (!isNaN(numValue) && numValue >= 0) {
                       setForm((prev) => ({ ...prev, area: value }));
-                      if (areaValues.length > 0) {
-                        setShowAreaSuggestions(true);
-                      }
                     }
                   }
                 }}
                 onFocus={() => {
-                  if (form.area.length >= 2 && areaValues.length > 0) {
+                  setAreaHighlightedIndex(-1);
+                  if (form.area && form.area.length >= 2) {
                     setShowAreaSuggestions(true);
-                    setAreaHighlightedIndex(-1);
                   }
                 }}
                 onBlur={() => {
@@ -441,46 +413,37 @@ export default function PredictionForm() {
                   }, 150);
                 }}
                 onKeyDown={(e) => {
-                  const displayValues = areaValues;
-
-                  if (!showAreaSuggestions && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
-                    if (displayValues.length > 0) {
-                      e.preventDefault();
-                      setShowAreaSuggestions(true);
-                      setAreaHighlightedIndex(0);
-                    }
-                    return;
-                  }
-
-                  if (!showAreaSuggestions) {
-                    if (e.key === "Tab") {
-                      e.preventDefault();
-                      populationInputRef.current?.focus();
-                    }
-                    return;
-                  }
-
                   switch (e.key) {
                     case "ArrowDown":
                       e.preventDefault();
-                      setAreaHighlightedIndex((prev) =>
-                        prev < displayValues.length - 1 ? prev + 1 : 0
-                      );
+                      if (!showAreaSuggestions && areaValues.length > 0) {
+                        setShowAreaSuggestions(true);
+                        setAreaHighlightedIndex(0);
+                      } else if (showAreaSuggestions) {
+                        setAreaHighlightedIndex((prev) =>
+                          prev < areaValues.length - 1 ? prev + 1 : 0
+                        );
+                      }
                       break;
 
                     case "ArrowUp":
                       e.preventDefault();
-                      setAreaHighlightedIndex((prev) =>
-                        prev > 0 ? prev - 1 : displayValues.length - 1
-                      );
+                      if (!showAreaSuggestions && areaValues.length > 0) {
+                        setShowAreaSuggestions(true);
+                        setAreaHighlightedIndex(areaValues.length - 1);
+                      } else if (showAreaSuggestions) {
+                        setAreaHighlightedIndex((prev) =>
+                          prev > 0 ? prev - 1 : areaValues.length - 1
+                        );
+                      }
                       break;
 
                     case "Enter":
                       e.preventDefault();
-                      if (areaHighlightedIndex >= 0 && areaHighlightedIndex < displayValues.length) {
+                      if (showAreaSuggestions && areaHighlightedIndex >= 0 && areaHighlightedIndex < areaValues.length) {
                         setForm((prev) => ({
                           ...prev,
-                          area: displayValues[areaHighlightedIndex],
+                          area: areaValues[areaHighlightedIndex],
                         }));
                         setShowAreaSuggestions(false);
                         setAreaHighlightedIndex(-1);
@@ -490,19 +453,15 @@ export default function PredictionForm() {
 
                     case "Tab":
                       e.preventDefault();
-                      if (areaHighlightedIndex >= 0 && areaHighlightedIndex < displayValues.length) {
+                      if (showAreaSuggestions && areaHighlightedIndex >= 0 && areaHighlightedIndex < areaValues.length) {
                         setForm((prev) => ({
                           ...prev,
-                          area: displayValues[areaHighlightedIndex],
+                          area: areaValues[areaHighlightedIndex],
                         }));
                         setShowAreaSuggestions(false);
                         setAreaHighlightedIndex(-1);
-                        setTimeout(() => populationInputRef.current?.focus(), 0);
-                      } else {
-                        setShowAreaSuggestions(false);
-                        setAreaHighlightedIndex(-1);
-                        populationInputRef.current?.focus();
                       }
+                      populationInputRef.current?.focus();
                       break;
 
                     case "Escape":
@@ -517,7 +476,7 @@ export default function PredictionForm() {
                 }}
               />
 
-              {showAreaSuggestions && areaValues.length > 0 && form.area !== "" && (
+              {showAreaSuggestions && areaValues && areaValues.length > 0 && form.area && (
                 <ul className="pf__suggestions">
                   {areaValues.map((v, idx) => (
                     <li
