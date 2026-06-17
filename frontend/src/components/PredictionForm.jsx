@@ -53,44 +53,46 @@ function AutocompleteInput({
   };
 
   const handleKeyDown = (e) => {
+    // If dropdown is closed and user presses arrow keys, open it
     if (!open && filtered.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      e.preventDefault();
       setOpen(true);
+      setHighlightedIndex(0);
       return;
     }
 
+    // If dropdown is closed and user presses Tab
     if (!open) {
-      if (e.key === "Tab") {
-        // Tab key: accept current value and move to next field
-        setOpen(false);
-        setHighlightedIndex(-1);
-        if (nextFieldRef?.current) {
-          e.preventDefault();
-          nextFieldRef.current.focus();
-        }
+      if (e.key === "Tab" && nextFieldRef?.current) {
+        e.preventDefault();
+        nextFieldRef.current.focus();
       }
       return;
     }
 
+    // Dropdown is open - handle all key presses
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setHighlightedIndex((prev) => 
-          prev < filtered.length - 1 ? prev + 1 : 0
-        );
+        setHighlightedIndex((prev) => {
+          const nextIdx = prev < filtered.length - 1 ? prev + 1 : 0;
+          return nextIdx;
+        });
         break;
 
       case "ArrowUp":
         e.preventDefault();
-        setHighlightedIndex((prev) => 
-          prev > 0 ? prev - 1 : filtered.length - 1
-        );
+        setHighlightedIndex((prev) => {
+          const nextIdx = prev > 0 ? prev - 1 : filtered.length - 1;
+          return nextIdx;
+        });
         break;
 
       case "Enter":
         e.preventDefault();
         if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          handleSelectSuggestion(filtered[highlightedIndex]);
-          // Move focus to next field after selection
+          const selected = filtered[highlightedIndex];
+          handleSelectSuggestion(selected);
           if (nextFieldRef?.current) {
             setTimeout(() => nextFieldRef.current.focus(), 0);
           }
@@ -98,17 +100,19 @@ function AutocompleteInput({
         break;
 
       case "Tab":
-        // Accept highlighted suggestion if available, otherwise just close
+        e.preventDefault();
         if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          e.preventDefault();
-          handleSelectSuggestion(filtered[highlightedIndex]);
+          const selected = filtered[highlightedIndex];
+          handleSelectSuggestion(selected);
           if (nextFieldRef?.current) {
             setTimeout(() => nextFieldRef.current.focus(), 0);
           }
         } else {
-          // Close dropdown and let Tab proceed naturally
           setOpen(false);
           setHighlightedIndex(-1);
+          if (nextFieldRef?.current) {
+            nextFieldRef.current.focus();
+          }
         }
         break;
 
@@ -135,11 +139,16 @@ function AutocompleteInput({
           onChange={(e) => {
             onChange(e.target.value);
             setOpen(true);
+            setHighlightedIndex(-1);
           }}
           onFocus={() => {
-            if (filtered.length > 0) {
+            if (value && filtered.length > 0) {
               setOpen(true);
+              setHighlightedIndex(-1);
             }
+          }}
+          onBlur={() => {
+            setTimeout(() => setOpen(false), 200);
           }}
           onKeyDown={handleKeyDown}
           disabled={disabled}
@@ -151,7 +160,7 @@ function AutocompleteInput({
             {filtered.slice(0, 8).map((s, idx) => (
               <li 
                 key={s}
-                className={`pf__suggestion-item ${idx === highlightedIndex ? "pf__suggestion-item--highlighted" : ""}`}
+                className={idx === highlightedIndex ? "pf__suggestion-item pf__suggestion-item--highlighted" : "pf__suggestion-item"}
                 onMouseDown={() => handleSelectSuggestion(s)}
                 onMouseEnter={() => setHighlightedIndex(idx)}
               >
@@ -413,7 +422,9 @@ export default function PredictionForm() {
                     const numValue = parseFloat(value);
                     if (!isNaN(numValue) && numValue >= 0) {
                       setForm((prev) => ({ ...prev, area: value }));
-                      setShowAreaSuggestions(areaValues.length > 0);
+                      if (areaValues.length > 0) {
+                        setShowAreaSuggestions(true);
+                      }
                     }
                   }
                 }}
@@ -424,17 +435,19 @@ export default function PredictionForm() {
                   }
                 }}
                 onBlur={() => {
-                  setShowAreaSuggestions(false);
-                  setAreaHighlightedIndex(-1);
+                  setTimeout(() => {
+                    setShowAreaSuggestions(false);
+                    setAreaHighlightedIndex(-1);
+                  }, 150);
                 }}
                 onKeyDown={(e) => {
                   const displayValues = areaValues;
 
                   if (!showAreaSuggestions && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
                     if (displayValues.length > 0) {
+                      e.preventDefault();
                       setShowAreaSuggestions(true);
                       setAreaHighlightedIndex(0);
-                      e.preventDefault();
                     }
                     return;
                   }
@@ -476,8 +489,8 @@ export default function PredictionForm() {
                       break;
 
                     case "Tab":
+                      e.preventDefault();
                       if (areaHighlightedIndex >= 0 && areaHighlightedIndex < displayValues.length) {
-                        e.preventDefault();
                         setForm((prev) => ({
                           ...prev,
                           area: displayValues[areaHighlightedIndex],
@@ -488,6 +501,7 @@ export default function PredictionForm() {
                       } else {
                         setShowAreaSuggestions(false);
                         setAreaHighlightedIndex(-1);
+                        populationInputRef.current?.focus();
                       }
                       break;
 
@@ -508,7 +522,7 @@ export default function PredictionForm() {
                   {areaValues.map((v, idx) => (
                     <li
                       key={v}
-                      className={`pf__suggestion-item ${idx === areaHighlightedIndex ? "pf__suggestion-item--highlighted" : ""}`}
+                      className={idx === areaHighlightedIndex ? "pf__suggestion-item pf__suggestion-item--highlighted" : "pf__suggestion-item"}
                       onMouseDown={() => {
                         setForm((prev) => ({
                           ...prev,
