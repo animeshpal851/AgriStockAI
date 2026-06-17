@@ -9,43 +9,152 @@ const API_BASE = import.meta.env.DEV
   ? "http://localhost:5000/" 
   : "https://agristock-backend.onrender.com/";
 
-function AutocompleteInput({ label, id, value, onChange, suggestions, disabled, placeholder, onSelect }) {
+function AutocompleteInput({ 
+  label, 
+  id, 
+  value, 
+  onChange, 
+  suggestions, 
+  disabled, 
+  placeholder, 
+  onSelect,
+  inputRef,
+  nextFieldRef 
+}) {
   const [open, setOpen] = useState(false);
-  const ref = useRef();
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const containerRef = useRef();
 
   const filtered = suggestions.filter(
     (s) => s.toLowerCase().includes(value.toLowerCase()) && s.toLowerCase() !== value.toLowerCase()
   );
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Reset highlighted index when filtered suggestions change
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [filtered]);
+
+  const handleSelectSuggestion = (suggestion) => {
+    onSelect(suggestion);
+    setOpen(false);
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!open && filtered.length > 0 && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      setOpen(true);
+      return;
+    }
+
+    if (!open) {
+      if (e.key === "Tab") {
+        // Tab key: accept current value and move to next field
+        setOpen(false);
+        setHighlightedIndex(-1);
+        if (nextFieldRef?.current) {
+          e.preventDefault();
+          nextFieldRef.current.focus();
+        }
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) => 
+          prev < filtered.length - 1 ? prev + 1 : 0
+        );
+        break;
+
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => 
+          prev > 0 ? prev - 1 : filtered.length - 1
+        );
+        break;
+
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
+          handleSelectSuggestion(filtered[highlightedIndex]);
+          // Move focus to next field after selection
+          if (nextFieldRef?.current) {
+            setTimeout(() => nextFieldRef.current.focus(), 0);
+          }
+        }
+        break;
+
+      case "Tab":
+        // Accept highlighted suggestion if available, otherwise just close
+        if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
+          e.preventDefault();
+          handleSelectSuggestion(filtered[highlightedIndex]);
+          if (nextFieldRef?.current) {
+            setTimeout(() => nextFieldRef.current.focus(), 0);
+          }
+        } else {
+          // Close dropdown and let Tab proceed naturally
+          setOpen(false);
+          setHighlightedIndex(-1);
+        }
+        break;
+
+      case "Escape":
+        e.preventDefault();
+        setOpen(false);
+        setHighlightedIndex(-1);
+        break;
+
+      default:
+        break;
+    }
+  };
+
   return (
-    <div className="pf__field" ref={ref}>
+    <div className="pf__field" ref={containerRef}>
       <label htmlFor={id} className="pf__label">{label}</label>
       <div className="pf__autocomplete-wrap">
         <input
-  id={id}
-  className="pf__input"
-  value={value}
-  onChange={(e) => {
-    onChange(e.target.value);
-    setOpen(true);
-  }}
-  onFocus={() => setOpen(true)}
-  disabled={disabled}
-  placeholder={placeholder}
-  autoComplete="off"
-/>
+          ref={inputRef}
+          id={id}
+          className="pf__input"
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => {
+            if (filtered.length > 0) {
+              setOpen(true);
+            }
+          }}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          placeholder={placeholder}
+          autoComplete="off"
+        />
         {open && filtered.length > 0 && (
           <ul className="pf__suggestions">
-            {filtered.slice(0, 8).map((s) => (
-              <li key={s} onMouseDown={() => { onSelect(s); setOpen(false); }}>
+            {filtered.slice(0, 8).map((s, idx) => (
+              <li 
+                key={s}
+                className={`pf__suggestion-item ${idx === highlightedIndex ? "pf__suggestion-item--highlighted" : ""}`}
+                onMouseDown={() => handleSelectSuggestion(s)}
+                onMouseEnter={() => setHighlightedIndex(idx)}
+              >
                 {s}
               </li>
             ))}
@@ -74,6 +183,17 @@ export default function PredictionForm() {
   const [unknownCrop, setUnknownCrop] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [showAreaSuggestions, setShowAreaSuggestions] = useState(false);
+  const [areaHighlightedIndex, setAreaHighlightedIndex] = useState(-1);
+
+  // Create refs for all form fields
+  const stateInputRef = useRef();
+  const districtInputRef = useRef();
+  const cropInputRef = useRef();
+  const seasonInputRef = useRef();
+  const areaInputRef = useRef();
+  const populationInputRef = useRef();
+  const productionInputRef = useRef();
+  const rainfallInputRef = useRef();
 
   useEffect(() => {
     fetch("/final_dataset.json")
@@ -222,6 +342,8 @@ export default function PredictionForm() {
             onSelect={set("state")}
             suggestions={states}
             placeholder="e.g. Maharashtra"
+            inputRef={stateInputRef}
+            nextFieldRef={districtInputRef}
           />
 
           <AutocompleteInput
@@ -233,6 +355,8 @@ export default function PredictionForm() {
             suggestions={districts}
             disabled={!form.state}
             placeholder={form.state ? "Select district" : "Select state first"}
+            inputRef={districtInputRef}
+            nextFieldRef={cropInputRef}
           />
 
           <AutocompleteInput
@@ -243,6 +367,8 @@ export default function PredictionForm() {
             onSelect={set("crop")}
             suggestions={crops}
             placeholder="e.g. Rice"
+            inputRef={cropInputRef}
+            nextFieldRef={seasonInputRef}
           />
 
           <AutocompleteInput
@@ -253,6 +379,8 @@ export default function PredictionForm() {
             onSelect={set("season")}
             suggestions={seasons}
             placeholder="e.g. Kharif"
+            inputRef={seasonInputRef}
+            nextFieldRef={areaInputRef}
           />
 
           {unknownCrop && (
@@ -263,71 +391,146 @@ export default function PredictionForm() {
           )}
 
           <div className="pf__field">
-  <label htmlFor="area" className="pf__label">
-    Area (hectares)
-  </label>
+            <label htmlFor="area" className="pf__label">
+              Area (hectares)
+            </label>
+            <div className="pf__autocomplete-wrap">
+              <input
+                ref={areaInputRef}
+                id="area"
+                className="pf__input"
+                type="number"
+                value={form.area}
+                placeholder="e.g. 2500"
+                min="0"
+                step="any"
+                onChange={(e) => {
+                  let value = e.target.value;
+                  if (value === "") {
+                    setForm((prev) => ({ ...prev, area: "" }));
+                    setShowAreaSuggestions(false);
+                  } else {
+                    const numValue = parseFloat(value);
+                    if (!isNaN(numValue) && numValue >= 0) {
+                      setForm((prev) => ({ ...prev, area: value }));
+                      setShowAreaSuggestions(areaValues.length > 0);
+                    }
+                  }
+                }}
+                onFocus={() => {
+                  if (form.area.length >= 2 && areaValues.length > 0) {
+                    setShowAreaSuggestions(true);
+                    setAreaHighlightedIndex(-1);
+                  }
+                }}
+                onBlur={() => {
+                  setShowAreaSuggestions(false);
+                  setAreaHighlightedIndex(-1);
+                }}
+                onKeyDown={(e) => {
+                  const displayValues = areaValues;
 
-  <div className="pf__autocomplete-wrap">
-    <input
-      id="area"
-      className="pf__input"
-      type="number"
-      value={form.area}
-      placeholder="e.g. 2500"
-      min="0"
-      step="any"
-      onChange={(e) => {
-        let value = e.target.value;
-        if (value === "") {
-          setForm((prev) => ({ ...prev, area: "" }));
-        } else {
-          const numValue = parseFloat(value);
-          if (!isNaN(numValue) && numValue >= 0) {
-            setForm((prev) => ({ ...prev, area: value }));
-          }
-        }
-        setShowAreaSuggestions(true);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          setShowAreaSuggestions(false);
-          e.target.blur();
-        }
-      }}
-      onFocus={() => {
-        if (form.area.length >= 2) {
-          setShowAreaSuggestions(true);
-        }
-      }}
-    />
+                  if (!showAreaSuggestions && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+                    if (displayValues.length > 0) {
+                      setShowAreaSuggestions(true);
+                      setAreaHighlightedIndex(0);
+                      e.preventDefault();
+                    }
+                    return;
+                  }
 
-    {showAreaSuggestions &&
-      areaValues.length > 0 &&
-      form.area !== "" && (
-        <ul className="pf__suggestions">
-          {areaValues.map((v) => (
-            <li
-              key={v}
-              onMouseDown={() => {
-                setForm((prev) => ({
-                  ...prev,
-                  area: v,
-                }));
-                setShowAreaSuggestions(false);
-              }}
-            >
-              {v}
-            </li>
-          ))}
-        </ul>
-      )}
-  </div>
-</div>
+                  if (!showAreaSuggestions) {
+                    if (e.key === "Tab") {
+                      e.preventDefault();
+                      populationInputRef.current?.focus();
+                    }
+                    return;
+                  }
+
+                  switch (e.key) {
+                    case "ArrowDown":
+                      e.preventDefault();
+                      setAreaHighlightedIndex((prev) =>
+                        prev < displayValues.length - 1 ? prev + 1 : 0
+                      );
+                      break;
+
+                    case "ArrowUp":
+                      e.preventDefault();
+                      setAreaHighlightedIndex((prev) =>
+                        prev > 0 ? prev - 1 : displayValues.length - 1
+                      );
+                      break;
+
+                    case "Enter":
+                      e.preventDefault();
+                      if (areaHighlightedIndex >= 0 && areaHighlightedIndex < displayValues.length) {
+                        setForm((prev) => ({
+                          ...prev,
+                          area: displayValues[areaHighlightedIndex],
+                        }));
+                        setShowAreaSuggestions(false);
+                        setAreaHighlightedIndex(-1);
+                        setTimeout(() => populationInputRef.current?.focus(), 0);
+                      }
+                      break;
+
+                    case "Tab":
+                      if (areaHighlightedIndex >= 0 && areaHighlightedIndex < displayValues.length) {
+                        e.preventDefault();
+                        setForm((prev) => ({
+                          ...prev,
+                          area: displayValues[areaHighlightedIndex],
+                        }));
+                        setShowAreaSuggestions(false);
+                        setAreaHighlightedIndex(-1);
+                        setTimeout(() => populationInputRef.current?.focus(), 0);
+                      } else {
+                        setShowAreaSuggestions(false);
+                        setAreaHighlightedIndex(-1);
+                      }
+                      break;
+
+                    case "Escape":
+                      e.preventDefault();
+                      setShowAreaSuggestions(false);
+                      setAreaHighlightedIndex(-1);
+                      break;
+
+                    default:
+                      break;
+                  }
+                }}
+              />
+
+              {showAreaSuggestions && areaValues.length > 0 && form.area !== "" && (
+                <ul className="pf__suggestions">
+                  {areaValues.map((v, idx) => (
+                    <li
+                      key={v}
+                      className={`pf__suggestion-item ${idx === areaHighlightedIndex ? "pf__suggestion-item--highlighted" : ""}`}
+                      onMouseDown={() => {
+                        setForm((prev) => ({
+                          ...prev,
+                          area: v,
+                        }));
+                        setShowAreaSuggestions(false);
+                        setAreaHighlightedIndex(-1);
+                      }}
+                      onMouseEnter={() => setAreaHighlightedIndex(idx)}
+                    >
+                      {v}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
           <div className="pf__field">
             <label htmlFor="population" className="pf__label">Population</label>
             <input
+              ref={populationInputRef}
               id="population"
               className="pf__input"
               type="number"
@@ -336,12 +539,19 @@ export default function PredictionForm() {
               placeholder="e.g. 500000"
               min="0"
               step="any"
+              onKeyDown={(e) => {
+                if (e.key === "Tab") {
+                  e.preventDefault();
+                  productionInputRef.current?.focus();
+                }
+              }}
             />
           </div>
 
           <div className="pf__field">
             <label htmlFor="production" className="pf__label">Production (tonnes)</label>
             <input
+              ref={productionInputRef}
               id="production"
               className="pf__input"
               type="number"
@@ -350,6 +560,12 @@ export default function PredictionForm() {
               placeholder="e.g. 8000"
               min="0"
               step="any"
+              onKeyDown={(e) => {
+                if (e.key === "Tab") {
+                  e.preventDefault();
+                  rainfallInputRef.current?.focus();
+                }
+              }}
             />
           </div>
 
@@ -359,6 +575,7 @@ export default function PredictionForm() {
               <span className="pf__auto-badge">Auto-filled</span>
             </label>
             <input
+              ref={rainfallInputRef}
               id="rainfall"
               className="pf__input pf__input--autofill"
               type="number"

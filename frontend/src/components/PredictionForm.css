@@ -112,6 +112,27 @@
   color: var(--harvest);
 }
 
+.pf__suggestion-item {
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  list-style: none;
+}
+
+.pf__suggestion-item:hover {
+  background: rgba(200, 131, 42, 0.08);
+  color: var(--harvest);
+}
+
+.pf__suggestion-item--highlighted {
+  background: rgba(200, 131, 42, 0.15);
+  color: var(--harvest);
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px rgba(200, 131, 42, 0.3);
+}
+
 .pf__unknown-crop {
   grid-column: 1 / -1;
   display: flex;
